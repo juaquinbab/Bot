@@ -15,8 +15,6 @@ const numbers = [
 
 
 
- 
-    
   
   
 
@@ -29,8 +27,6 @@ const numbers = [
   
   const messages = [
 
-    
-  
 
 
   // 
