@@ -1,0 +1,73 @@
+const express = require('express');
+const qrcodeTerminal = require('qrcode-terminal');
+const { Client } = require('whatsapp-web.js');
+const Excel = require('exceljs');
+
+const app = express();
+const client = new Client();
+
+const numbers = [
+"573204037757",
+]
+
+const messages = [
+"hola care bola",
+]
+
+client.on('qr', (qr) => {
+// Genera un código QR en la consola para escanear
+qrcodeTerminal.generate(qr, { small: true });
+});
+
+client.on('authenticated', (session) => {
+console.log('Autenticado');
+});
+
+client.on('ready', () => {
+console.log('Listo para recibir y enviar mensajes');
+
+// Recorre el array de números de teléfono
+numbers.forEach((phoneNumber, index) => {
+// Agrega el sufijo @c.us al número de teléfono
+const phoneNumberWithSuffix = `${phoneNumber}@c.us`;
+// Aray de Message
+
+// Envía el mensaje "Hola" al número de teléfono
+client.sendMessage(phoneNumberWithSuffix, messages[index]);
+
+
+});
+
+client.on('message', (message) => {
+  console.log(`Mensaje recibido de: ${message.from}`);
+  console.log(`Contenido del mensaje: ${message.body}`);
+
+  client.sendMessage(message.from, 'Gracias por tu respuesta, esta es muy valiosa para nosotros');
+
+  const workbook = new Excel.Workbook();
+  workbook.xlsx.readFile('./messages.xlsx').then(() => {
+    const worksheet = workbook.getWorksheet(1);
+    let existingRow;
+    // Buscar la fila con el número de teléfono
+    existingRow = worksheet.findRow(message.from,1);
+
+    if (existingRow) {
+        // Si existe, agregar un segundo mensaje en la siguiente columna
+        existingRow.getCell(2).value = message.body;
+    } else {
+        // Si no existe, agregar una nueva fila con los datos del mensaje
+        worksheet.addRow([message.from, message.body]);
+    }
+
+    workbook.xlsx.writeFile('./messages.xlsx');
+  });
+});
+// 
+
+});
+
+
+app.listen(3000, () => {
+console.log('Servidor Express escuchando en el puerto 3000');
+client.initialize();
+});
